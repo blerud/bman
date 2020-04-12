@@ -1,30 +1,42 @@
 import * as React from 'react';
 import * as PIXI from 'pixi.js';
-import Game from "./game";
+import Game, {InitInfo} from "./game";
 import Socket from "./socket";
 
 interface Props {
     sock: Socket;
-    name: string;
+    initInfo: InitInfo;
 }
 
-interface State {
-    sock: Socket;
-}
-
-class GameScreen extends React.Component<Props, State> {
+class GameScreen extends React.Component<Props, {}> {
     private game: Game;
     private app: PIXI.Application;
+    private initInfo: InitInfo;
+    private sock: Socket;
 
     constructor(props: Props) {
         super(props);
 
         this.app = new PIXI.Application({width: 800, height: 600});
         this.game = new Game(this.app, props.sock);
+        this.sock = props.sock;
+        this.initInfo = props.initInfo;
+    }
+
+    componentDidMount() {
+        let container = document.getElementById("container");
+        container.appendChild(this.app.view);
+
+        this.game.renderBackground();
+        this.game.renderPlayer();
     }
 
     render() {
-        return this.app.view;
+        return (
+            <div id="container">
+                <h1>game screen</h1>
+            </div>
+        );
     }
 }
 
