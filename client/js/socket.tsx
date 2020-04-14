@@ -29,7 +29,7 @@ class Socket {
     }
 
     connected(): boolean {
-        return this.sock == null;
+        return this.sock != null;
     }
 }
 
