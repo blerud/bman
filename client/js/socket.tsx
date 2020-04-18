@@ -40,7 +40,11 @@ class Socket {
         if (action.get(Keys.LEFT)) actionByte |= 1 << 2;
         if (action.get(Keys.RIGHT)) actionByte |= 1 << 3;
         if (action.get(Keys.BOMB)) actionByte |= 1 << 4;
-        this.sendMessage(MessageTypes.CLIENT_ACTION, new Uint8Array([actionByte]));
+        let buf = new ArrayBuffer(5);
+        let bufView = new DataView(buf);
+        bufView.setUint32(0, this.userid);
+        bufView.setUint8(4, actionByte);
+        this.sendMessage(MessageTypes.CLIENT_ACTION, buf);
     }
 
     private sendMessage(messageId: number, message: ArrayBuffer) {
