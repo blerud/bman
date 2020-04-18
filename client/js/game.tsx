@@ -73,11 +73,13 @@ class Game {
                 return;
         }
 
-        if (event.type == "keyup") {
+        if (event.type == "keydown") {
             this.keyPressed(key);
-        } else if (event.type == "keydown") {
+        } else if (event.type == "keyup") {
             this.keyReleased(key);
         }
+
+        this.sock.sendPlayerAction(this.keys);
 
         event.preventDefault();
     }

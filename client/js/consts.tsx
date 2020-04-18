@@ -12,3 +12,16 @@ export class Keys {
     static BOMB = 32;
     static ESC = 27;
 }
+
+export class MessageTypes {
+    static SERVER_HEARTBEAT = 0;
+    static GAME_INIT = 2;
+    static GAME_START = 3;
+    static GAME_END = 6;
+    static CREATED = 10;
+    static UPDATED = 11;
+    static DELETED = 12;
+
+    static CLIENT_HEARTBEAT = 1;
+    static CLIENT_ACTION = 20;
+}

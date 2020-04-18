@@ -1,4 +1,5 @@
 import {InitInfo} from "./game";
+import {Keys, MessageTypes} from "./consts";
 
 class Socket {
     private username: string;
@@ -30,6 +31,31 @@ class Socket {
 
     connected(): boolean {
         return this.sock != null;
+    }
+
+    sendPlayerAction(action: Map<number, boolean>) {
+        let actionByte = 0;
+        if (action.get(Keys.UP)) actionByte |= 1;
+        if (action.get(Keys.DOWN)) actionByte |= 1 << 1;
+        if (action.get(Keys.LEFT)) actionByte |= 1 << 2;
+        if (action.get(Keys.RIGHT)) actionByte |= 1 << 3;
+        if (action.get(Keys.BOMB)) actionByte |= 1 << 4;
+        this.sendMessage(MessageTypes.CLIENT_ACTION, new Uint8Array([actionByte]));
+    }
+
+    private sendMessage(messageId: number, message: ArrayBuffer) {
+        let header = new ArrayBuffer(13);
+        let headerView = new DataView(header);
+        headerView.setUint8(0, messageId);
+        headerView.setUint32(1, message.byteLength + 8, false);
+
+        let timestamp = Date.now();
+        let timestampFirstHalf = Math.floor(timestamp / Math.pow(2, 32));
+        let timestampSecondHalf = Math.floor(timestamp % Math.pow(2, 32));
+        headerView.setUint32(5, timestampFirstHalf, false);
+        headerView.setUint32(9, timestampSecondHalf, false);
+        this.sock.send(header);
+        this.sock.send(message);
     }
 }
 
