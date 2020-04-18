@@ -6,23 +6,24 @@ import (
 )
 
 const (
-	tick = 30
+	tick          = 30
 	millisPerTick = time.Duration(time.Millisecond / tick)
 	timeToConnect = time.Duration(1 * time.Second)
 )
 
 type Server struct {
-	serverId int32
+	serverId    int32
 	coordinator *Coordinator
-	clients  map[int32]*Client
+	clients     map[int32]*Client
 
-	readQueue chan []byte
-	sendQueue chan Message
-	registerQueue chan *Client
+	readQueue       chan []byte
+	sendQueue       chan Message
+	registerQueue   chan *Client
 	unregisterQueue chan *Client
 
-	entities map[int32]Entity
-
+	entities         map[int32]Entity
+	clientIdToEntity map[int32]int32
+	entityIdToClient map[int32]int32
 }
 
 func newServer(serverId int32, coord *Coordinator) *Server {
@@ -35,6 +36,8 @@ func newServer(serverId int32, coord *Coordinator) *Server {
 		make(chan *Client),
 		make(chan *Client),
 		make(map[int32]Entity),
+		make(map[int32]int32),
+		make(map[int32]int32),
 	}
 }
 
@@ -48,7 +51,10 @@ func (server *Server) run() {
 			for _, client := range server.clients {
 				client.writeQueue <- messageBytes
 			}
-			fmt.Printf("===== %s\n", string(messageBytes))
+			code := message.messageType
+			length := message.length
+			timestamp := message.timestamp
+			fmt.Printf("===== code: %d, length: %d, timestamp: %d\n", code, length, timestamp)
 		case message := <-server.sendQueue:
 			message.timestamp = time.Now().UnixNano()
 			message.length = len(message.content)
@@ -80,35 +86,26 @@ func (server *Server) startDeleteTimer() {
 }
 
 func (server *Server) process(message Message) bool {
-	processedAny := false
 	switch message.messageType {
 	case messageClientHeartbeat:
 		return true
-	case messageUpdated:
-		content := message.content
-		numberUpdated := int(content[0])
-		for i := 0; i < numberUpdated; i++ {
-			processed, bytesRead := server.processUpdate(content)
-			processedAny = processedAny || processed
-			content = content[bytesRead:]
-		}
+	case messageClientAction:
+		server.processClientAction(message)
 		return true
 	default:
 		return false
 	}
 }
 
-func (server *Server) processUpdate(content []byte) (bool, int) {
-	entityType := content[0]
-	entityId := readInt32FromBuffer(content[1:])
-	switch entityType {
-	case PLAYER:
-		player := server.entities[entityId]
-		bytesRead := player.entityInfo.processUpdate(content)
-		return true, bytesRead
-	default:
-		return false, 0
+func (server *Server) processClientAction(message Message) bool {
+	clientId := readInt32FromBuffer(message.content)
+	entityId := server.clientIdToEntity[clientId]
+	playerEntity := server.entities[entityId]
+	if player, ok := playerEntity.entityInfo.(*Player); ok {
+		player.processPlayerAction(message)
+		return true
 	}
+	return false
 }
 
 func (server *Server) sendTick() {

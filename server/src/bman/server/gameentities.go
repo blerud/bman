@@ -16,18 +16,17 @@ const (
 )
 
 type EntityInfo interface {
-	processUpdate(bytes []byte) int
 	encode() []byte
 }
 
 type Entity struct {
 	// x and y of bottom left corner of object -- all objects are square
-	entityId int32
+	entityId   int32
 	entityType byte
-	x float32
-	y float32
-	width float32
-	height float32
+	x          float32
+	y          float32
+	width      float32
+	height     float32
 
 	entityInfo EntityInfo
 }
