@@ -87,16 +87,17 @@ func (p *Player) encode() []byte {
 }
 
 func (p *Player) update(action PlayerAction) {
+	p.action = action
 }
 
 func decode(content []byte) PlayerAction {
 	actionByte := content[4]
 	return PlayerAction{
 		up:    actionByte&1 == 1,
-		down:  actionByte&(1<<1) == 1,
-		left:  actionByte&(1<<2) == 1,
-		right: actionByte&(1<<3) == 1,
-		bomb:  actionByte&(1<<4) == 1,
+		down:  (actionByte>>1)&1 == 1,
+		left:  (actionByte>>2)&1 == 1,
+		right: (actionByte>>3)&1 == 1,
+		bomb:  (actionByte>>4)&1 == 1,
 	}
 }
 

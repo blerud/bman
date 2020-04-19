@@ -33,8 +33,8 @@ func newServer(serverId int32, coord *Coordinator) *Server {
 		serverId,
 		coord,
 		make(map[int32]*Client),
-		make(chan []byte),
-		make(chan Message),
+		make(chan []byte, 100),
+		make(chan Message, 100),
 		make(chan *Client),
 		make(chan *Client),
 		make(map[int32]*Entity),
@@ -51,9 +51,9 @@ func (server *Server) run() {
 		case messageBytes := <-server.readQueue:
 			message := messageFromBytes(messageBytes)
 			server.process(message)
-			for _, client := range server.clients {
-				client.writeQueue <- messageBytes
-			}
+			//for _, client := range server.clients {
+			//	client.writeQueue <- messageBytes
+			//}
 			code := message.messageType
 			length := message.length
 			timestamp := message.timestamp
@@ -61,6 +61,7 @@ func (server *Server) run() {
 		case message := <-server.sendQueue:
 			message.timestamp = time.Now().UnixNano() / (int64(time.Millisecond) / int64(time.Nanosecond))
 			message.length = len(message.content) + 8
+			fmt.Println("sent message ", message.encodeMessage())
 			for _, client := range server.clients {
 				client.writeQueue <- message.encodeMessage()
 			}
@@ -79,7 +80,7 @@ func (server *Server) run() {
 				close(client.writeQueue)
 			}
 		case _ = <-ticker.C:
-			server.heartbeat()
+			//server.heartbeat()
 			server.tick()
 		}
 	}
@@ -145,10 +146,10 @@ func (server *Server) tick() {
 				xMove += xSpeed
 			}
 
-			player.entity.x += xSpeed
-			player.entity.y += ySpeed
+			player.entity.x += xMove
+			player.entity.y += yMove
 
-			if xSpeed != 0 || ySpeed != 0 {
+			if xMove != 0 || yMove != 0 {
 				server.updated = append(server.updated, entityId)
 			}
 		}
@@ -157,12 +158,10 @@ func (server *Server) tick() {
 	if len(server.updated) > 0 {
 		updateBuf := make([]byte, 1)
 		updateBuf[0] = byte(len(server.updated))
-		i := 1
 		fmt.Println("updated: ", server.updated)
 		for _, entityId := range server.updated {
 			entityBytes := server.entities[entityId].encode()
-			updateBuf = append(updateBuf[i:], entityBytes...)
-			i += len(entityBytes)
+			updateBuf = append(updateBuf, entityBytes...)
 		}
 
 		server.updated = make([]int32, 0)

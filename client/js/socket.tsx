@@ -14,6 +14,15 @@ class Socket {
         this.sock = null;
 
         this.connect();
+        this.setupSocket();
+    }
+
+    setupSocket() {
+        this.sock.binaryType = "arraybuffer";
+        this.sock.onmessage = function(event: MessageEvent) {
+            let data = event.data as ArrayBuffer;
+            console.log("event length: " + data.byteLength + ", msg: " + new Uint8Array(data));
+        }
     }
 
     connect(): boolean {
