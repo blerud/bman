@@ -59,8 +59,8 @@ func (server *Server) run() {
 			timestamp := message.timestamp
 			fmt.Printf("===== code: %d, length: %d, timestamp: %d\n", code, length, timestamp)
 		case message := <-server.sendQueue:
-			message.timestamp = time.Now().UnixNano()
-			message.length = len(message.content)
+			message.timestamp = time.Now().UnixNano() / (int64(time.Millisecond) / int64(time.Nanosecond))
+			message.length = len(message.content) + 8
 			for _, client := range server.clients {
 				client.writeQueue <- message.encodeMessage()
 			}
