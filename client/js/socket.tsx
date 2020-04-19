@@ -1,17 +1,26 @@
 import {InitInfo} from "./game";
 import {Keys, MessageTypes} from "./consts";
 
+export interface Message {
+    type: number
+    length: number
+    timestamp: number
+    content: ArrayBuffer
+}
+
 class Socket {
     private username: string;
     private userid: number;
     private gameid: number;
     private sock: WebSocket;
+    private serverMessageHandler: (message: Message) => boolean;
 
     constructor(initInfo: InitInfo) {
         this.username = initInfo.username;
         this.userid = initInfo.userid;
         this.gameid = initInfo.gameid;
         this.sock = null;
+        this.serverMessageHandler = (message: Message) => true;
 
         this.connect();
         this.setupSocket();
@@ -43,7 +52,14 @@ class Socket {
                     let timestampSecondHalf = view.getUint32(bytesRead + 9, false);
                     let timestamp = timestampFirstHalf * Math.pow(2, 32) + timestampSecondHalf;
                     let content = byteBuf.slice(bytesRead + 13, bytesRead + messageLength + 5);
-                    // console.log("event messageType: " + messageType + " messageLength: " + messageLength + " timestamp: " + timestamp + " content: " + new Uint8Array(content));
+
+                    let message: Message = {
+                        type: messageType,
+                        length: messageLength,
+                        timestamp: timestamp,
+                        content: content,
+                    };
+                    this.serverMessageHandler(message);
 
                     bytesRead += messageLength + 5;
                 }
@@ -76,6 +92,10 @@ class Socket {
 
     connected(): boolean {
         return this.sock != null;
+    }
+
+    registerMessageHandler(messageHandler: any) {
+        this.serverMessageHandler = messageHandler;
     }
 
     sendPlayerAction(action: Map<number, boolean>) {

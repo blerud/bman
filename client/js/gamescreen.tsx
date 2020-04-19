@@ -18,7 +18,7 @@ class GameScreen extends React.Component<Props, {}> {
         super(props);
 
         this.app = new PIXI.Application({width: 800, height: 600});
-        this.game = new Game(this.app, props.sock);
+        this.game = new Game(this.app, props.sock, props.initInfo);
         this.sock = props.sock;
         this.initInfo = props.initInfo;
     }

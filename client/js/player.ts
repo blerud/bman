@@ -1,3 +1,5 @@
+import * as PIXI from "pixi.js";
+
 enum Direction {
     UP,
     DOWN,
@@ -6,9 +8,9 @@ enum Direction {
 }
 
 class Player {
-    private x: number;
-    private y: number;
-    private id: number;
+    public x: number;
+    public y: number;
+    public id: number;
     private width: number;
     private height: number;
     private xSpeed: number;
@@ -18,6 +20,7 @@ class Player {
     private numBombs: number;
     private numBombsAvailable: number;
     private numFire: number;
+    public sprite: PIXI.Sprite;
 
     constructor(x: number, y: number, id: number) {
         this.x = x;
@@ -35,6 +38,8 @@ class Player {
         this.numBombs = 1;
         this.numBombsAvailable = this.numBombs;
         this.numFire = 1;
+
+        this.sprite = PIXI.Sprite.from('assets/res/bomb1.png');
     }
 }
 

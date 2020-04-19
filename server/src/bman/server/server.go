@@ -134,10 +134,10 @@ func (server *Server) tick() {
 			yMove := float32(0)
 			action := player.action
 			if action.up {
-				yMove += ySpeed
+				yMove -= ySpeed
 			}
 			if action.down {
-				yMove -= ySpeed
+				yMove += ySpeed
 			}
 			if action.left {
 				xMove -= xSpeed
