@@ -19,10 +19,47 @@ class Socket {
 
     setupSocket() {
         this.sock.binaryType = "arraybuffer";
+        let byteBuf = new ArrayBuffer(1000);
+        let bytesInBuf = 0;
         this.sock.onmessage = function(event: MessageEvent) {
             let data = event.data as ArrayBuffer;
-            console.log("event length: " + data.byteLength + ", msg: " + new Uint8Array(data));
-        }
+            // console.log("event length: " + data.byteLength + ", msg: " + new Uint8Array(data));
+            let dataView = new Uint8Array(data);
+            let bufView = new Uint8Array(byteBuf, bytesInBuf, byteBuf.byteLength - bytesInBuf);
+            for (let i = 0; i < data.byteLength; i++) {
+                bufView[i + bytesInBuf] = dataView[i];
+            }
+            bytesInBuf += data.byteLength;
+
+            let bytesRead = 0;
+
+            while (bytesInBuf - bytesRead > 5) {
+                let view = new DataView(byteBuf, bytesRead, bytesInBuf - bytesRead);
+                let messageLength = view.getUint32(1, false);
+                if (bytesInBuf - 5 >= messageLength) {
+                    // now we can read!
+                    let messageType = new Uint8Array(byteBuf)[bytesRead];
+
+                    let timestampFirstHalf = view.getUint32(bytesRead + 5, false);
+                    let timestampSecondHalf = view.getUint32(bytesRead + 9, false);
+                    let timestamp = timestampFirstHalf * Math.pow(2, 32) + timestampSecondHalf;
+                    let content = byteBuf.slice(bytesRead + 13, bytesRead + messageLength + 5);
+                    // console.log("event messageType: " + messageType + " messageLength: " + messageLength + " timestamp: " + timestamp + " content: " + new Uint8Array(content));
+
+                    bytesRead += messageLength + 5;
+                }
+            }
+
+            if (bytesRead != 0) {
+                let zeroView = new Uint8Array(byteBuf, 0, byteBuf.byteLength);
+                let copyView = new Uint8Array(byteBuf, bytesRead, bytesInBuf - bytesRead);
+                for (let i = 0; i < copyView.byteLength; i++) {
+                    zeroView[i] = copyView[i + bytesRead];
+                }
+            }
+
+            bytesInBuf -= bytesRead;
+        }.bind(this);
     }
 
     connect(): boolean {
