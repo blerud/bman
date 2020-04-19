@@ -23,7 +23,6 @@ class Socket {
         let bytesInBuf = 0;
         this.sock.onmessage = function(event: MessageEvent) {
             let data = event.data as ArrayBuffer;
-            // console.log("event length: " + data.byteLength + ", msg: " + new Uint8Array(data));
             let dataView = new Uint8Array(data);
             let bufView = new Uint8Array(byteBuf, bytesInBuf, byteBuf.byteLength - bytesInBuf);
             for (let i = 0; i < data.byteLength; i++) {
