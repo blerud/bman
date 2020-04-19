@@ -21,7 +21,7 @@ type Server struct {
 	registerQueue   chan *Client
 	unregisterQueue chan *Client
 
-	entities         map[int32]Entity
+	entities         map[int32]*Entity
 	clientIdToEntity map[int32]int32
 	entityIdToClient map[int32]int32
 }
@@ -35,7 +35,7 @@ func newServer(serverId int32, coord *Coordinator) *Server {
 		make(chan Message),
 		make(chan *Client),
 		make(chan *Client),
-		make(map[int32]Entity),
+		make(map[int32]*Entity),
 		make(map[int32]int32),
 		make(map[int32]int32),
 	}
@@ -64,6 +64,10 @@ func (server *Server) run() {
 		case client := <-server.registerQueue:
 			fmt.Println("adding client")
 			server.clients[client.id] = client
+			player := newPlayer(client.id, 0, 0)
+			server.entities[client.id] = player
+			server.clientIdToEntity[client.id] = client.id
+			server.entityIdToClient[client.id] = client.id
 		case client := <-server.unregisterQueue:
 			if _, ok := server.clients[client.id]; ok {
 				fmt.Println("removing client")
