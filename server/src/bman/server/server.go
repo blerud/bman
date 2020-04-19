@@ -40,7 +40,7 @@ func newServer(serverId int32, coord *Coordinator) *Server {
 		make(map[int32]*Entity),
 		make(map[int32]int32),
 		make(map[int32]int32),
-		make([]int32, 100),
+		make([]int32, 0),
 	}
 }
 
@@ -154,7 +154,22 @@ func (server *Server) tick() {
 		}
 	}
 
-	// todo send update
+	if len(server.updated) > 0 {
+		updateBuf := make([]byte, 1)
+		updateBuf[0] = byte(len(server.updated))
+		i := 1
+		fmt.Println("updated: ", server.updated)
+		for _, entityId := range server.updated {
+			entityBytes := server.entities[entityId].encode()
+			updateBuf = append(updateBuf[i:], entityBytes...)
+			i += len(entityBytes)
+		}
+
+		server.updated = make([]int32, 0)
+
+		updateMessage := Message{messageUpdated, 0, 0, updateBuf}
+		server.sendQueue <- updateMessage
+	}
 }
 
 func messageFromBytes(bytes []byte) Message {

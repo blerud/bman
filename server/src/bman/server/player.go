@@ -76,7 +76,7 @@ func (p *Player) encode() []byte {
 		p.action.toByte(),
 		p.direction,
 	}
-	buffer := make([]byte, 14)
+	buffer := make([]byte, 15)
 	buffer[0] = playerUpdate.entityType
 	writeInt32ToBuffer(playerUpdate.entityId, buffer[1:])
 	writeFloat32ToBuffer(playerUpdate.x, buffer[5:])
