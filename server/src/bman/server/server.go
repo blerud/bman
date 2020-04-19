@@ -21,9 +21,11 @@ type Server struct {
 	registerQueue   chan *Client
 	unregisterQueue chan *Client
 
-	entities         map[int32]*Entity
-	clientIdToEntity map[int32]int32
-	entityIdToClient map[int32]int32
+	entities           map[int32]*Entity
+	clientIdToEntityId map[int32]int32
+	entityIdToClientId map[int32]int32
+
+	updated []int32
 }
 
 func newServer(serverId int32, coord *Coordinator) *Server {
@@ -38,6 +40,7 @@ func newServer(serverId int32, coord *Coordinator) *Server {
 		make(map[int32]*Entity),
 		make(map[int32]int32),
 		make(map[int32]int32),
+		make([]int32, 100),
 	}
 }
 
@@ -66,8 +69,8 @@ func (server *Server) run() {
 			server.clients[client.id] = client
 			player := newPlayer(client.id, 0, 0)
 			server.entities[client.id] = player
-			server.clientIdToEntity[client.id] = client.id
-			server.entityIdToClient[client.id] = client.id
+			server.clientIdToEntityId[client.id] = client.id
+			server.entityIdToClientId[client.id] = client.id
 		case client := <-server.unregisterQueue:
 			if _, ok := server.clients[client.id]; ok {
 				fmt.Println("removing client")
@@ -76,7 +79,8 @@ func (server *Server) run() {
 				close(client.writeQueue)
 			}
 		case _ = <-ticker.C:
-			server.sendTick()
+			server.heartbeat()
+			server.tick()
 		}
 	}
 }
@@ -103,7 +107,7 @@ func (server *Server) process(message Message) bool {
 
 func (server *Server) processClientAction(message Message) bool {
 	clientId := readInt32FromBuffer(message.content)
-	entityId := server.clientIdToEntity[clientId]
+	entityId := server.clientIdToEntityId[clientId]
 	playerEntity := server.entities[entityId]
 	if player, ok := playerEntity.entityInfo.(*Player); ok {
 		player.processPlayerAction(message)
@@ -112,10 +116,45 @@ func (server *Server) processClientAction(message Message) bool {
 	return false
 }
 
-func (server *Server) sendTick() {
+func (server *Server) heartbeat() {
 	for _, client := range server.clients {
 		client.writeQueue <- []byte{}
 	}
+}
+
+func (server *Server) tick() {
+	for _, entityId := range server.clientIdToEntityId {
+		entity := server.entities[entityId]
+		if player, ok := entity.entityInfo.(*Player); ok {
+			xSpeed := playerXSpeed / tick
+			ySpeed := playerYSpeed / tick
+
+			xMove := float32(0)
+			yMove := float32(0)
+			action := player.action
+			if action.up {
+				yMove += ySpeed
+			}
+			if action.down {
+				yMove -= ySpeed
+			}
+			if action.left {
+				xMove -= xSpeed
+			}
+			if action.right {
+				xMove += xSpeed
+			}
+
+			player.entity.x += xSpeed
+			player.entity.y += ySpeed
+
+			if xSpeed != 0 || ySpeed != 0 {
+				server.updated = append(server.updated, entityId)
+			}
+		}
+	}
+
+	// todo send update
 }
 
 func messageFromBytes(bytes []byte) Message {

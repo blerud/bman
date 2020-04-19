@@ -7,6 +7,8 @@ const (
 const (
 	playerWidth    = float32(0.5)
 	playerHeight   = float32(0.5)
+	playerXSpeed   = float32(1)
+	playerYSpeed   = float32(1)
 	directionUp    = 0
 	directionLeft  = 1
 	directionDown  = 2
