@@ -7,7 +7,7 @@ import (
 
 const (
 	tick          = 30
-	millisPerTick = time.Duration(time.Millisecond / tick)
+	millisPerTick = time.Duration(time.Second / tick)
 	timeToConnect = time.Duration(1 * time.Second)
 )
 
@@ -51,17 +51,14 @@ func (server *Server) run() {
 		case messageBytes := <-server.readQueue:
 			message := messageFromBytes(messageBytes)
 			server.process(message)
-			//for _, client := range server.clients {
-			//	client.writeQueue <- messageBytes
-			//}
-			code := message.messageType
-			length := message.length
-			timestamp := message.timestamp
-			fmt.Printf("===== code: %d, length: %d, timestamp: %d\n", code, length, timestamp)
+			//code := message.messageType
+			//length := message.length
+			//timestamp := message.timestamp
+			//fmt.Printf("===== code: %d, length: %d, timestamp: %d\n", code, length, timestamp)
 		case message := <-server.sendQueue:
 			message.timestamp = time.Now().UnixNano() / (int64(time.Millisecond) / int64(time.Nanosecond))
 			message.length = len(message.content) + 8
-			fmt.Println("sent message ", message.encodeMessage())
+			//fmt.Println("sent message ", message.encodeMessage())
 			for _, client := range server.clients {
 				client.writeQueue <- message.encodeMessage()
 			}
@@ -80,7 +77,7 @@ func (server *Server) run() {
 				close(client.writeQueue)
 			}
 		case _ = <-ticker.C:
-			//server.heartbeat()
+			server.heartbeat()
 			server.tick()
 		}
 	}
@@ -118,9 +115,7 @@ func (server *Server) processClientAction(message Message) bool {
 }
 
 func (server *Server) heartbeat() {
-	for _, client := range server.clients {
-		client.writeQueue <- []byte{}
-	}
+	server.sendQueue <- Message{messageServerHeartbeat, 0, 0, []byte{}}
 }
 
 func (server *Server) tick() {

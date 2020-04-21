@@ -25,3 +25,7 @@ export class MessageTypes {
     static CLIENT_HEARTBEAT = 1;
     static CLIENT_ACTION = 20;
 }
+
+export class ObjectTypes {
+    static PLAYER = 0;
+}

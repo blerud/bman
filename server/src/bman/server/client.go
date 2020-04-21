@@ -2,16 +2,15 @@ package server
 
 import (
 	"encoding/binary"
-	"fmt"
 	"github.com/gorilla/websocket"
 	"log"
 )
 
 type Client struct {
-	conn *websocket.Conn
-	server *Server
-	id int32
-	name string
+	conn               *websocket.Conn
+	server             *Server
+	id                 int32
+	name               string
 	incompleteMessages []byte
 
 	writeQueue chan []byte
@@ -61,14 +60,14 @@ func (c *Client) getCompleteMessages() [][]byte {
 	if len(c.incompleteMessages) < 5 {
 		return make([][]byte, 0)
 	}
-	fmt.Println(c.incompleteMessages)
+	//fmt.Println(c.incompleteMessages)
 	completeMessages := make([][]byte, 0)
 	i := 0
-	for i + 5 < len(c.incompleteMessages) {
-		length := int(binary.BigEndian.Uint32(c.incompleteMessages[i + 1:i + 5]))
-		if len(c.incompleteMessages) - 5 >= length {
-			completeMessages = append(completeMessages, c.incompleteMessages[i:i + 5 + length])
-			c.incompleteMessages = c.incompleteMessages[i + 5 + length:]
+	for i+5 < len(c.incompleteMessages) {
+		length := int(binary.BigEndian.Uint32(c.incompleteMessages[i+1 : i+5]))
+		if len(c.incompleteMessages)-5 >= length {
+			completeMessages = append(completeMessages, c.incompleteMessages[i:i+5+length])
+			c.incompleteMessages = c.incompleteMessages[i+5+length:]
 			i += 5 + length
 		} else {
 			break

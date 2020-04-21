@@ -1,7 +1,8 @@
 import Socket, {Message} from "./socket";
 import * as PIXI from "pixi.js";
-import {Keys} from "./consts";
+import {Keys, MessageTypes} from "./consts";
 import Player from "./player";
+import {PlayerMessage} from "./messages";
 
 export interface InitInfo {
     username: string;
@@ -33,21 +34,37 @@ class Game {
     }
 
     processMessage(message: Message): boolean {
-        // console.log("event messageType: " + message.type + " messageLength: " + message.length + " timestamp: " + message.timestamp + " content: " + new Uint8Array(message.content));
-        // for now we're assuming only update message, and only 1 obj in it on id 6969
+        switch (message.type) {
+            case MessageTypes.SERVER_HEARTBEAT:
+                this.sock.sendClientHeartbeat(message.timestamp);
+                return true;
+            case MessageTypes.CREATED:
+                return true;
+            case MessageTypes.UPDATED:
+                return this.processUpdated(message);
+            case MessageTypes.DELETED:
+                return true;
+        }
+
+        return false;
+    }
+
+    processUpdated(message: Message): boolean {
         let contentView = new DataView(message.content);
         let numUpdated = contentView.getUint8(0);
-        let entityType = contentView.getUint8(1)
-        let id = contentView.getUint32(2);
-        let posX = contentView.getFloat32(6);
-        let posY = contentView.getFloat32(10);
-        let action = contentView.getUint8(14);
-        let direction = contentView.getUint8(15);
-        this.player.x = posX;
-        this.player.y = posY;
-        this.player.sprite.x = posX;
-        this.player.sprite.y = posY;
-        // console.log(new Uint8Array(message.content), numUpdated, id, posX, posY, action, direction);
+        let offset = 1;
+        for (let i = 0; i < numUpdated; i++) {
+            let entityType = contentView.getUint8(offset);
+            if (entityType == PlayerMessage.TYPE) {
+                let playerMessage = PlayerMessage.fromBytes(new DataView(message.content, offset));
+                offset += PlayerMessage.LENGTH;
+
+                this.player.x = playerMessage.posX;
+                this.player.y = playerMessage.posY;
+                this.player.sprite.x = playerMessage.posX;
+                this.player.sprite.y = playerMessage.posY;
+            }
+        }
         return true;
     }
 

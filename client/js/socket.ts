@@ -98,6 +98,16 @@ class Socket {
         this.serverMessageHandler = messageHandler;
     }
 
+    sendClientHeartbeat(serverHeartbeatTimestamp: number) {
+        let buf = new ArrayBuffer(8);
+        let buView = new DataView(buf);
+        let timestampFirstHalf = Math.floor(serverHeartbeatTimestamp / Math.pow(2, 32));
+        let timestampSecondHalf = Math.floor(serverHeartbeatTimestamp % Math.pow(2, 32));
+        buView.setUint32(0, timestampFirstHalf, false);
+        buView.setUint32(4, timestampSecondHalf, false);
+        this.sendMessage(MessageTypes.CLIENT_HEARTBEAT, buf);
+    }
+
     sendPlayerAction(action: Map<number, boolean>) {
         let actionByte = 0;
         if (action.get(Keys.UP)) actionByte |= 1;
