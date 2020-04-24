@@ -4,7 +4,8 @@ import GameScreen from "./gamescreen";
 import Socket from "./socket";
 
 interface State {
-    text: string
+    name: string
+    serverid: string
     currentScreen: Screen
 }
 
@@ -17,13 +18,15 @@ class App extends React.Component<{}, State> {
         super(props);
 
         this.state = {
-            text: '',
+            name: '',
+            serverid: '',
             currentScreen: Screen.MENU
         };
 
         this.handleClick = this.handleClick.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
-        this.handleChange = this.handleChange.bind(this);
+        this.handleServeridChange = this.handleServeridChange.bind(this);
+        this.handleNameChange = this.handleNameChange.bind(this);
     }
 
     async handleClick(event: React.MouseEvent) {
@@ -41,26 +44,29 @@ class App extends React.Component<{}, State> {
         this.setState({currentScreen: Screen.GAME});
     }
 
-    handleChange(event: React.FormEvent<HTMLInputElement>) {
-        this.setState({text: event.currentTarget.value});
+    handleServeridChange(event: React.FormEvent<HTMLInputElement>) {
+        this.setState({serverid: event.currentTarget.value});
+    }
+
+    handleNameChange(event: React.FormEvent<HTMLInputElement>) {
+        this.setState({name: event.currentTarget.value});
     }
 
     async handleSubmit(event: React.FormEvent) {
-        let arr = new ArrayBuffer(5);
-        let view = new DataView(arr);
-        view.setUint8(0, 0x01);
-        view.setUint32(1, this.state.text.length, false);
-        this.socket.send(arr);
-        this.socket.send(this.state.text);
+        this.initInfo = {username: this.state.name, userid: 1234, gameid: Number(this.state.serverid)};
+        this.sock = new Socket(this.initInfo);
+        this.setState({currentScreen: Screen.GAME});
     }
 
     render() {
         switch (this.state.currentScreen) {
             case Screen.MENU:
                 return (<div>
-                    <button onClick={this.handleClick}>post</button>
-                    <input type="text" onChange={this.handleChange} />
-                    <button onClick={this.handleSubmit}>asdf</button>
+                    <button onClick={this.handleClick}>create server</button>
+                    <br />
+                    <input type="text" onChange={this.handleServeridChange} placeholder="server id" />
+                    <input type="text" onChange={this.handleNameChange} placeholder="name" />
+                    <button onClick={this.handleSubmit}>join server</button>
                 </div>);
             case Screen.LOBBY:
             case Screen.GAME:
