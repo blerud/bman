@@ -37,9 +37,9 @@ class App extends React.Component<{}, State> {
         let json = await res.json();
         console.log(json['gameId']);
         let username = "lend";
-        let userid = "6969";
+        let userid = this.generateUserId();
         let gameid = json['gameId'].toString();
-        this.initInfo = {username: username, userid: Number(userid), gameid: Number(gameid)};
+        this.initInfo = {username: username, userid: userid, gameid: Number(gameid)};
         this.sock = new Socket(this.initInfo);
         this.setState({currentScreen: Screen.GAME});
     }
@@ -53,9 +53,14 @@ class App extends React.Component<{}, State> {
     }
 
     async handleSubmit(event: React.FormEvent) {
-        this.initInfo = {username: this.state.name, userid: 1234, gameid: Number(this.state.serverid)};
+        let userid = this.generateUserId();
+        this.initInfo = {username: this.state.name, userid: userid, gameid: Number(this.state.serverid)};
         this.sock = new Socket(this.initInfo);
         this.setState({currentScreen: Screen.GAME});
+    }
+
+    generateUserId() {
+        return Math.floor(Math.random() * Math.pow(2, 31));
     }
 
     render() {
