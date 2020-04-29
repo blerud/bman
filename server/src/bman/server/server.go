@@ -64,6 +64,8 @@ func (server *Server) run() {
 		case client := <-server.registerQueue:
 			fmt.Println("adding client")
 			server.clients[client.id] = client
+			server.sendState(client.id)
+
 			player := newPlayer(client.id, 0, 0)
 			server.entities[client.id] = player
 			server.clientIdToEntityId[client.id] = client.id
@@ -89,6 +91,25 @@ func (server *Server) startDeleteTimer() {
 	if len(server.clients) == 0 {
 		server.coordinator.closeServer(server.serverId)
 	}
+}
+
+func (server *Server) sendToClient(clientId int32, message Message) {
+	message.timestamp = time.Now().UnixNano() / (int64(time.Millisecond) / int64(time.Nanosecond))
+	message.length = len(message.content) + 8
+	server.clients[clientId].writeQueue <- message.encodeMessage()
+}
+
+func (server *Server) sendState(clientId int32) {
+	createBuf := make([]byte, 1)
+	createBuf[0] = byte(len(server.entities))
+
+	for _, entity := range server.entities {
+		entityBytes := entity.encode()
+		createBuf = append(createBuf, entityBytes...)
+	}
+
+	createMessage := Message{messageCreated, 0, 0, createBuf}
+	server.sendToClient(clientId, createMessage)
 }
 
 func (server *Server) createEntity(entity *Entity) {
