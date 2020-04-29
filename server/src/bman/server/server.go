@@ -8,7 +8,7 @@ import (
 const (
 	tick          = 30
 	millisPerTick = time.Duration(time.Second / tick)
-	timeToConnect = time.Duration(1 * time.Second)
+	timeToConnect = time.Duration(10 * time.Second)
 )
 
 type Server struct {
@@ -58,7 +58,6 @@ func (server *Server) run() {
 		case message := <-server.sendQueue:
 			message.timestamp = time.Now().UnixNano() / (int64(time.Millisecond) / int64(time.Nanosecond))
 			message.length = len(message.content) + 8
-			//fmt.Println("sent message ", message.encodeMessage())
 			for _, client := range server.clients {
 				client.writeQueue <- message.encodeMessage()
 			}
@@ -69,6 +68,7 @@ func (server *Server) run() {
 			server.entities[client.id] = player
 			server.clientIdToEntityId[client.id] = client.id
 			server.entityIdToClientId[client.id] = client.id
+			server.createEntity(player)
 		case client := <-server.unregisterQueue:
 			if _, ok := server.clients[client.id]; ok {
 				fmt.Println("removing client")
@@ -89,6 +89,17 @@ func (server *Server) startDeleteTimer() {
 	if len(server.clients) == 0 {
 		server.coordinator.closeServer(server.serverId)
 	}
+}
+
+func (server *Server) createEntity(entity *Entity) {
+	createBuf := make([]byte, 1)
+	createBuf[0] = byte(1)
+	entityBytes := server.entities[entity.entityId].encode()
+	createBuf = append(createBuf, entityBytes...)
+	fmt.Printf("created object %d\n", entity.entityId)
+
+	createMessage := Message{messageCreated, 0, 0, createBuf}
+	server.sendQueue <- createMessage
 }
 
 func (server *Server) process(message Message) bool {
