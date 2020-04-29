@@ -14,11 +14,11 @@ class Entity {
 
     constructor(id: number, x: number, y: number, width: number, height: number, entityInfo: EntityInfo) {
         this._id = id;
-        this._x = x;
-        this._y = y;
-        this._width = width;
-        this._height = height;
-        this._entityInfo = entityInfo;
+        this.entityInfo = entityInfo;
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
     }
 
     get id(): number {
