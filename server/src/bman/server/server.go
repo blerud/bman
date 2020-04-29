@@ -185,7 +185,6 @@ func (server *Server) tick() {
 	if len(server.updated) > 0 {
 		updateBuf := make([]byte, 1)
 		updateBuf[0] = byte(len(server.updated))
-		fmt.Println("updated: ", server.updated)
 		for _, entityId := range server.updated {
 			entityBytes := server.entities[entityId].encode()
 			updateBuf = append(updateBuf, entityBytes...)
