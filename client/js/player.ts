@@ -1,45 +1,112 @@
 import * as PIXI from "pixi.js";
+import {EntityInfo} from "./entity";
 
-enum Direction {
+export enum Direction {
     UP,
     DOWN,
     LEFT,
     RIGHT
 }
 
-class Player {
-    public x: number;
-    public y: number;
-    public id: number;
-    private width: number;
-    private height: number;
-    private xSpeed: number;
-    private ySpeed: number;
-    private direction: Direction;
-    private hasKick: boolean;
-    private numBombs: number;
-    private numBombsAvailable: number;
-    private numFire: number;
-    public sprite: PIXI.Sprite;
+export class PlayerConsts {
+    HEIGHT = 1;
+    WIDTH = 1;
+}
 
-    constructor(x: number, y: number, id: number) {
-        this.x = x;
-        this.y = y;
-        this.id = id;
-        this.width = 1.0;
-        this.height = 1.0;
+class Player implements EntityInfo {
+    private _xSpeed: number;
+    private _ySpeed: number;
+    private _direction: Direction;
+    private _hasKick: boolean;
+    private _numBombs: number;
+    private _numBombsAvailable: number;
+    private _numFire: number;
+    private _sprite: PIXI.Sprite;
 
-        this.xSpeed = 0;
-        this.ySpeed = 0;
+    constructor() {
+        this._xSpeed = 0;
+        this._ySpeed = 0;
 
-        this.direction = Direction.DOWN;
+        this._direction = Direction.DOWN;
 
-        this.hasKick = false;
-        this.numBombs = 1;
-        this.numBombsAvailable = this.numBombs;
-        this.numFire = 1;
+        this._hasKick = false;
+        this._numBombs = 1;
+        this._numBombsAvailable = this._numBombs;
+        this._numFire = 1;
 
-        this.sprite = PIXI.Sprite.from('assets/res/bomb1.png');
+        this._sprite = PIXI.Sprite.from('assets/res/bomb1.png');
+    }
+
+    get xSpeed(): number {
+        return this._xSpeed;
+    }
+
+    set xSpeed(value: number) {
+        this._xSpeed = value;
+    }
+
+    get ySpeed(): number {
+        return this._ySpeed;
+    }
+
+    set ySpeed(value: number) {
+        this._ySpeed = value;
+    }
+
+    get direction(): Direction {
+        return this._direction;
+    }
+
+    set direction(value: Direction) {
+        this._direction = value;
+    }
+
+    get hasKick(): boolean {
+        return this._hasKick;
+    }
+
+    set hasKick(value: boolean) {
+        this._hasKick = value;
+    }
+
+    get numBombs(): number {
+        return this._numBombs;
+    }
+
+    set numBombs(value: number) {
+        this._numBombs = value;
+    }
+
+    get numBombsAvailable(): number {
+        return this._numBombsAvailable;
+    }
+
+    set numBombsAvailable(value: number) {
+        this._numBombsAvailable = value;
+    }
+
+    get numFire(): number {
+        return this._numFire;
+    }
+
+    set numFire(value: number) {
+        this._numFire = value;
+    }
+
+    get sprite(): PIXI.Sprite {
+        return this._sprite;
+    }
+
+    set sprite(value: PIXI.Sprite) {
+        this._sprite = value;
+    }
+
+    x(value: number): void {
+        this.sprite.x = value;
+    }
+
+    y(value: number): void {
+        this.sprite.y = value;
     }
 }
 

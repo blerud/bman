@@ -3,6 +3,7 @@ import * as PIXI from "pixi.js";
 import {Keys, MessageTypes} from "./consts";
 import Player from "./player";
 import {PlayerMessage} from "./messages";
+import Entity from "./entity";
 
 export interface InitInfo {
     username: string;
@@ -15,11 +16,12 @@ class Game {
     private sock: Socket;
     private keys: Map<number, boolean>;
     private player: Player;
+    private entities: Map<number, Entity>;
 
     constructor(app: PIXI.Application, sock: Socket, initInfo: InitInfo) {
         this.app = app;
         this.sock = sock;
-        this.player = new Player(0, 0, initInfo.userid);
+        this.entities = new Map<number, Entity>();
 
         let loader = PIXI.Loader.shared;
         loader.add('bomb1', 'assets/res/bomb1.png');
@@ -31,6 +33,7 @@ class Game {
 
         this.sock.registerMessageHandler(this.processMessage.bind(this));
         this.setupKeyboard();
+        this.sock.init();
     }
 
     processMessage(message: Message): boolean {
@@ -39,7 +42,7 @@ class Game {
                 this.sock.sendClientHeartbeat(message.timestamp);
                 return true;
             case MessageTypes.CREATED:
-                return true;
+                return this.processCreated(message);
             case MessageTypes.UPDATED:
                 return this.processUpdated(message);
             case MessageTypes.DELETED:
@@ -47,6 +50,26 @@ class Game {
         }
 
         return false;
+    }
+
+    processCreated(message: Message): boolean {
+        let contentView = new DataView(message.content);
+        let numUpdated = contentView.getUint8(0);
+        let offset = 1;
+        for (let i = 0; i < numUpdated; i++) {
+            let entityType = contentView.getUint8(offset);
+            if (entityType == PlayerMessage.TYPE) {
+                let playerMessage = PlayerMessage.fromBytes(new DataView(message.content, offset));
+                offset += PlayerMessage.LENGTH;
+
+                let playerInfo = new Player();
+                let player = new Entity(playerMessage.id, playerMessage.posX, playerMessage.posY, 1, 1, playerInfo);
+
+                this.entities.set(playerMessage.id, player);
+                this.app.stage.addChild(playerInfo.sprite);
+            }
+        }
+        return true;
     }
 
     processUpdated(message: Message): boolean {
@@ -59,10 +82,15 @@ class Game {
                 let playerMessage = PlayerMessage.fromBytes(new DataView(message.content, offset));
                 offset += PlayerMessage.LENGTH;
 
-                this.player.x = playerMessage.posX;
-                this.player.y = playerMessage.posY;
-                this.player.sprite.x = playerMessage.posX;
-                this.player.sprite.y = playerMessage.posY;
+                let player = this.entities.get(playerMessage.id);
+                if (player == undefined) {
+                    continue;
+                }
+
+                player.x = playerMessage.posX;
+                player.y = playerMessage.posY;
+                let playerInfo = player.entityInfo as Player;
+                playerInfo.direction = playerMessage.direction;
             }
         }
         return true;
@@ -147,9 +175,6 @@ class Game {
     }
 
     renderPlayer() {
-        this.player.sprite.x = this.player.x;
-        this.player.sprite.y = this.player.y;
-        this.app.stage.addChild(this.player.sprite);
     }
 }
 

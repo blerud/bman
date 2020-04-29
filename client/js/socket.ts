@@ -21,7 +21,9 @@ class Socket {
         this.gameid = initInfo.gameid;
         this.sock = null;
         this.serverMessageHandler = (message: Message) => true;
+    }
 
+    init() {
         this.connect();
         this.setupSocket();
     }
@@ -59,7 +61,7 @@ class Socket {
                         timestamp: timestamp,
                         content: content,
                     };
-                    this.serverMessageHandler(message);
+                    this.serverMessageHandler(message); // todo WE SEND THE CREATED MESSAGE TOO EARLY, CLIENT IS NOT READY TO RECEIVE
 
                     bytesRead += messageLength + 5;
                 }

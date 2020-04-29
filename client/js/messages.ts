@@ -1,3 +1,5 @@
+import {Direction} from "./player";
+
 export class PlayerMessage {
     static readonly TYPE = 0;
     static readonly LENGTH = 15;
@@ -5,7 +7,7 @@ export class PlayerMessage {
     posX: number;
     posY: number;
     action: number;
-    direction: number;
+    direction: Direction;
 
     static fromBytes(bytes: DataView): PlayerMessage {
         let message = new PlayerMessage();
