@@ -34,7 +34,7 @@ class GameScreen extends React.Component<Props, {}> {
     render() {
         return (
             <div id="container">
-                <h1>game screen</h1>
+                <h1>server id: {this.props.initInfo.gameid}</h1>
             </div>
         );
     }
