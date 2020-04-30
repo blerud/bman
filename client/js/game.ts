@@ -46,7 +46,7 @@ class Game {
             case MessageTypes.UPDATED:
                 return this.processUpdated(message);
             case MessageTypes.DELETED:
-                return true;
+                return this.processDeleted(message);
         }
 
         return false;
@@ -91,6 +91,28 @@ class Game {
                 player.y = playerMessage.posY;
                 let playerInfo = player.entityInfo as Player;
                 playerInfo.direction = playerMessage.direction;
+            }
+        }
+        return true;
+    }
+
+    processDeleted(message: Message): boolean {
+        let contentView = new DataView(message.content);
+        let numUpdated = contentView.getUint8(0);
+        let offset = 1;
+        for (let i = 0; i < numUpdated; i++) {
+            let entityType = contentView.getUint8(offset);
+            if (entityType == PlayerMessage.TYPE) {
+                let playerMessage = PlayerMessage.fromBytes(new DataView(message.content, offset));
+                offset += PlayerMessage.LENGTH;
+
+                let player = this.entities.get(playerMessage.id);
+                if (player == undefined) {
+                    continue;
+                }
+
+                this.app.stage.removeChild(player.entityInfo.sprite);
+                this.entities.delete(player.id);
             }
         }
         return true;
