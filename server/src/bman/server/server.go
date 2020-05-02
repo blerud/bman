@@ -70,7 +70,7 @@ func (server *Server) run() {
 			server.entities[client.id] = player
 			server.clientIdToEntityId[client.id] = client.id
 			server.entityIdToClientId[client.id] = client.id
-			server.createEntity(player)
+			server.createdEntity(player)
 		case client := <-server.unregisterQueue:
 			if _, ok := server.clients[client.id]; ok {
 				fmt.Println("removing client")
@@ -80,7 +80,7 @@ func (server *Server) run() {
 			}
 		case _ = <-ticker.C:
 			server.heartbeat()
-			server.tick()
+			server.step()
 		}
 	}
 }
@@ -112,7 +112,7 @@ func (server *Server) sendState(clientId int32) {
 	server.sendToClient(clientId, createMessage)
 }
 
-func (server *Server) createEntity(entity *Entity) {
+func (server *Server) createdEntity(entity *Entity) {
 	createBuf := make([]byte, 1)
 	createBuf[0] = byte(1)
 	entityBytes := server.entities[entity.entityId].encode()
@@ -150,35 +150,12 @@ func (server *Server) heartbeat() {
 	server.sendQueue <- Message{messageServerHeartbeat, 0, 0, []byte{}}
 }
 
-func (server *Server) tick() {
+func (server *Server) step() {
 	for _, entityId := range server.clientIdToEntityId {
 		entity := server.entities[entityId]
-		if player, ok := entity.entityInfo.(*Player); ok {
-			xSpeed := playerXSpeed / tick
-			ySpeed := playerYSpeed / tick
-
-			xMove := float32(0)
-			yMove := float32(0)
-			action := player.action
-			if action.up {
-				yMove -= ySpeed
-			}
-			if action.down {
-				yMove += ySpeed
-			}
-			if action.left {
-				xMove -= xSpeed
-			}
-			if action.right {
-				xMove += xSpeed
-			}
-
-			player.entity.x += xMove
-			player.entity.y += yMove
-
-			if xMove != 0 || yMove != 0 {
-				server.updated = append(server.updated, entityId)
-			}
+		updated := entity.entityInfo.step()
+		if updated {
+			server.updated = append(server.updated, entityId)
 		}
 	}
 

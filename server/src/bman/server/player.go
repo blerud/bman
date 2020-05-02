@@ -7,8 +7,8 @@ const (
 const (
 	playerWidth    = float32(0.5)
 	playerHeight   = float32(0.5)
-	playerXSpeed   = float32(100)
-	playerYSpeed   = float32(100)
+	playerXSpeed   = float32(10)
+	playerYSpeed   = float32(10)
 	directionUp    = 0
 	directionLeft  = 1
 	directionDown  = 2
@@ -84,6 +84,32 @@ func (p *Player) encode() []byte {
 	buffer[13] = playerUpdate.action
 	buffer[14] = playerUpdate.direction
 	return buffer
+}
+
+func (p *Player) step() bool {
+	xSpeed := playerXSpeed / tick
+	ySpeed := playerYSpeed / tick
+
+	xMove := float32(0)
+	yMove := float32(0)
+	action := p.action
+	if action.up {
+		yMove -= ySpeed
+	}
+	if action.down {
+		yMove += ySpeed
+	}
+	if action.left {
+		xMove -= xSpeed
+	}
+	if action.right {
+		xMove += xSpeed
+	}
+
+	p.entity.x += xMove
+	p.entity.y += yMove
+
+	return xMove != 0 || yMove != 0
 }
 
 func (p *Player) update(action PlayerAction) {

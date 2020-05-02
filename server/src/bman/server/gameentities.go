@@ -17,6 +17,7 @@ const (
 
 type EntityInfo interface {
 	encode() []byte
+	step() bool
 }
 
 type Entity struct {
