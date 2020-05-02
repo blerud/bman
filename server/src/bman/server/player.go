@@ -5,10 +5,10 @@ const (
 )
 
 const (
-	playerWidth    = float32(0.5)
-	playerHeight   = float32(0.5)
-	playerXSpeed   = float32(10)
-	playerYSpeed   = float32(10)
+	playerWidth    = float32(30)
+	playerHeight   = float32(30)
+	playerXSpeed   = float32(100)
+	playerYSpeed   = float32(100)
 	directionUp    = 0
 	directionLeft  = 1
 	directionDown  = 2
@@ -86,7 +86,7 @@ func (p *Player) encode() []byte {
 	return buffer
 }
 
-func (p *Player) step() bool {
+func (p *Player) step(view EntitiesView) bool {
 	xSpeed := playerXSpeed / tick
 	ySpeed := playerYSpeed / tick
 
@@ -106,10 +106,17 @@ func (p *Player) step() bool {
 		xMove += xSpeed
 	}
 
-	p.entity.x += xMove
-	p.entity.y += yMove
+	newX := p.entity.x + xMove
+	newY := p.entity.y + yMove
+	didMove := xMove != 0 || yMove != 0
 
-	return xMove != 0 || yMove != 0
+	if didMove && len(view.collisions(p.entity, newX, newY)) == 0 {
+		p.entity.x = newX
+		p.entity.y = newY
+		return true
+	}
+
+	return false
 }
 
 func (p *Player) update(action PlayerAction) {

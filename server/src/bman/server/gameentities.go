@@ -17,7 +17,7 @@ const (
 
 type EntityInfo interface {
 	encode() []byte
-	step() bool
+	step(view EntitiesView) bool
 }
 
 type Entity struct {

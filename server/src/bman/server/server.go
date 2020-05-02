@@ -11,6 +11,13 @@ const (
 	timeToConnect = time.Duration(10 * time.Second)
 )
 
+type EntitiesView interface {
+	collisions(entity *Entity, newX float32, newY float32) []*Entity
+	create(entity *Entity) bool
+	update(entity *Entity) bool
+	delete(entity *Entity) bool
+}
+
 type Server struct {
 	serverId    int32
 	coordinator *Coordinator
@@ -25,7 +32,9 @@ type Server struct {
 	clientIdToEntityId map[int32]int32
 	entityIdToClientId map[int32]int32
 
+	created []int32
 	updated []int32
+	deleted []int32
 }
 
 func newServer(serverId int32, coord *Coordinator) *Server {
@@ -40,6 +49,8 @@ func newServer(serverId int32, coord *Coordinator) *Server {
 		make(map[int32]*Entity),
 		make(map[int32]int32),
 		make(map[int32]int32),
+		make([]int32, 0),
+		make([]int32, 0),
 		make([]int32, 0),
 	}
 }
@@ -151,9 +162,8 @@ func (server *Server) heartbeat() {
 }
 
 func (server *Server) step() {
-	for _, entityId := range server.clientIdToEntityId {
-		entity := server.entities[entityId]
-		updated := entity.entityInfo.step()
+	for entityId, entity := range server.entities {
+		updated := entity.entityInfo.step(server)
 		if updated {
 			server.updated = append(server.updated, entityId)
 		}
@@ -172,6 +182,40 @@ func (server *Server) step() {
 		updateMessage := Message{messageUpdated, 0, 0, updateBuf}
 		server.sendQueue <- updateMessage
 	}
+}
+
+func (server *Server) collisions(entity *Entity, newX float32, newY float32) []*Entity {
+	collisions := make([]*Entity, 0)
+
+	for _, e := range server.entities {
+		collidingNow := server.collides(entity.x, entity.y, entity.width, entity.height, e.x, e.y, e.width, e.height)
+		if server.collides(newX, newY, entity.width, entity.height, e.x, e.y, e.width, e.height) && !collidingNow {
+			collisions = append(collisions, e)
+		}
+	}
+
+	return collisions
+}
+
+func (server *Server) create(entity *Entity) bool {
+
+	return true
+}
+
+func (server *Server) update(entity *Entity) bool {
+	return true
+}
+
+func (server *Server) delete(entity *Entity) bool {
+	return true
+}
+
+func (server *Server) collides(x1 float32, y1 float32, w1 float32, h1 float32,
+	x2 float32, y2 float32, w2 float32, h2 float32) bool {
+	if x1 > x2+w2 || x1+w1 < x2 || y1 > y2+h2 || y1+h1 < y2 {
+		return false
+	}
+	return true
 }
 
 func messageFromBytes(bytes []byte) Message {
