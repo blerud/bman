@@ -19,3 +19,19 @@ export class PlayerMessage {
         return message;
     }
 }
+
+export class HardWallMessage {
+    static readonly TYPE = 3;
+    static readonly LENGTH = 13;
+    id: number;
+    posX: number;
+    posY: number;
+
+    static fromBytes(bytes: DataView): HardWallMessage {
+        let message = new HardWallMessage();
+        message.id = bytes.getUint32(1);
+        message.posX = bytes.getFloat32(5);
+        message.posY = bytes.getFloat32(9);
+        return message;
+    }
+}

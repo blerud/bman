@@ -4,7 +4,8 @@ const (
 	PLAYER = iota
 	BOMB
 	ITEM
-	WALL
+	HARD_WALL
+	SOFT_WALL
 )
 
 const (

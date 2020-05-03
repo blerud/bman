@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"math/rand"
 	"time"
 )
 
@@ -56,6 +57,7 @@ func newServer(serverId int32, coord *Coordinator) *Server {
 }
 
 func (server *Server) run() {
+	server.init()
 	ticker := time.NewTicker(millisPerTick)
 	for {
 		select {
@@ -77,7 +79,7 @@ func (server *Server) run() {
 			server.clients[client.id] = client
 			server.sendState(client.id)
 
-			player := newPlayer(client.id, 0, 0)
+			player := newPlayer(client.id, 2, 2)
 			server.entities[client.id] = player
 			server.clientIdToEntityId[client.id] = client.id
 			server.entityIdToClientId[client.id] = client.id
@@ -93,6 +95,13 @@ func (server *Server) run() {
 			server.heartbeat()
 			server.step()
 		}
+	}
+}
+
+func (server *Server) init() {
+	for i := 0; i < 15; i++ {
+		wall := newHardWall(server.genEntityId(), float32(i), 0)
+		server.create(wall)
 	}
 }
 
@@ -169,6 +178,20 @@ func (server *Server) step() {
 		}
 	}
 
+	if len(server.created) > 0 {
+		createBuf := make([]byte, 1)
+		createBuf[0] = byte(len(server.created))
+		for _, entityId := range server.created {
+			entityBytes := server.entities[entityId].encode()
+			createBuf = append(createBuf, entityBytes...)
+		}
+
+		server.created = make([]int32, 0)
+
+		createMessage := Message{messageCreated, 0, 0, createBuf}
+		server.sendQueue <- createMessage
+	}
+
 	if len(server.updated) > 0 {
 		updateBuf := make([]byte, 1)
 		updateBuf[0] = byte(len(server.updated))
@@ -181,6 +204,20 @@ func (server *Server) step() {
 
 		updateMessage := Message{messageUpdated, 0, 0, updateBuf}
 		server.sendQueue <- updateMessage
+	}
+
+	if len(server.deleted) > 0 {
+		deleteBuf := make([]byte, 1)
+		deleteBuf[0] = byte(len(server.deleted))
+		for _, entityId := range server.deleted {
+			entityBytes := server.entities[entityId].encode()
+			deleteBuf = append(deleteBuf, entityBytes...)
+		}
+
+		server.deleted = make([]int32, 0)
+
+		deleteMessage := Message{messageCreated, 0, 0, deleteBuf}
+		server.sendQueue <- deleteMessage
 	}
 }
 
@@ -198,7 +235,12 @@ func (server *Server) collisions(entity *Entity, newX float32, newY float32) []*
 }
 
 func (server *Server) create(entity *Entity) bool {
+	if _, ok := server.entities[entity.entityId]; ok {
+		return false
+	}
 
+	server.entities[entity.entityId] = entity
+	server.created = append(server.created, entity.entityId)
 	return true
 }
 
@@ -207,6 +249,12 @@ func (server *Server) update(entity *Entity) bool {
 }
 
 func (server *Server) delete(entity *Entity) bool {
+	if _, ok := server.entities[entity.entityId]; !ok {
+		return false
+	}
+
+	delete(server.entities, entity.entityId)
+	server.deleted = append(server.deleted, entity.entityId)
 	return true
 }
 
@@ -216,6 +264,15 @@ func (server *Server) collides(x1 float32, y1 float32, w1 float32, h1 float32,
 		return false
 	}
 	return true
+}
+
+func (server *Server) genEntityId() int32 {
+	for {
+		id := rand.Int31()
+		if _, ok := server.entities[id]; !ok {
+			return id
+		}
+	}
 }
 
 func messageFromBytes(bytes []byte) Message {

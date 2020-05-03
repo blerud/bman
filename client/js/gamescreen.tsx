@@ -3,6 +3,13 @@ import * as PIXI from 'pixi.js';
 import Game, {InitInfo} from "./game";
 import Socket from "./socket";
 
+export class Const {
+    static WIDTH = 600;
+    static HEIGHT = 600;
+
+    static BLOCK_SIZE = Const.WIDTH / 15
+}
+
 interface Props {
     sock: Socket;
     initInfo: InitInfo;

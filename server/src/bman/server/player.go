@@ -5,10 +5,10 @@ const (
 )
 
 const (
-	playerWidth    = float32(30)
-	playerHeight   = float32(30)
-	playerXSpeed   = float32(100)
-	playerYSpeed   = float32(100)
+	playerWidth    = float32(1)
+	playerHeight   = float32(1)
+	playerXSpeed   = float32(3)
+	playerYSpeed   = float32(3)
 	directionUp    = 0
 	directionLeft  = 1
 	directionDown  = 2

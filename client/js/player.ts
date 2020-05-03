@@ -1,5 +1,6 @@
 import * as PIXI from "pixi.js";
 import {EntityInfo} from "./entity";
+import {Const} from "./gamescreen";
 
 export enum Direction {
     UP,
@@ -35,6 +36,8 @@ class Player implements EntityInfo {
         this._numFire = 1;
 
         this._sprite = PIXI.Sprite.from('assets/res/bomb1.png');
+        this._sprite.width = Const.BLOCK_SIZE;
+        this._sprite.height = Const.BLOCK_SIZE;
     }
 
     get xSpeed(): number {
@@ -102,11 +105,11 @@ class Player implements EntityInfo {
     }
 
     x(value: number): void {
-        this.sprite.x = value;
+        this.sprite.x = value * Const.BLOCK_SIZE;
     }
 
     y(value: number): void {
-        this.sprite.y = value;
+        this.sprite.y = value * Const.BLOCK_SIZE;
     }
 }
 
