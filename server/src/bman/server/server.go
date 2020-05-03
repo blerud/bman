@@ -281,7 +281,7 @@ func (server *Server) delete(entity *Entity) bool {
 
 func (server *Server) collides(x1 float32, y1 float32, w1 float32, h1 float32,
 	x2 float32, y2 float32, w2 float32, h2 float32) bool {
-	if x1 > x2+w2 || x1+w1 < x2 || y1 > y2+h2 || y1+h1 < y2 {
+	if x1 > x2+w2-1e-4 || x1+w1-1e-4 < x2 || y1 > y2+h2-1e-4 || y1+h1-1e-4 < y2 {
 		return false
 	}
 	return true

@@ -1,12 +1,16 @@
 package server
 
+import (
+	"math"
+)
+
 const (
 	actionMessageLength = 5
 )
 
 const (
-	playerWidth    = float32(0.9)
-	playerHeight   = float32(0.9)
+	playerWidth    = float32(1)
+	playerHeight   = float32(1)
 	playerXSpeed   = float32(3)
 	playerYSpeed   = float32(3)
 	directionUp    = 0
@@ -19,6 +23,8 @@ type Player struct {
 	entity         *Entity
 	action         PlayerAction
 	direction      byte
+	xSpeed         float32
+	ySpeed         float32
 	numBombs       int
 	bombsAvailable int
 	numFire        int
@@ -49,6 +55,8 @@ func newPlayer(id int32, x float32, y float32) *Entity {
 			false,
 		},
 		directionUp,
+		0,
+		0,
 		1,
 		1,
 		1,
@@ -97,25 +105,23 @@ func (p *Player) step(view EntitiesView) bool {
 	ySpeed := playerYSpeed / tick
 	locX, locY := p.currentSquare()
 
-	xMove := float32(0)
-	yMove := float32(0)
 	action := p.action
 
 	if action.up {
-		yMove -= ySpeed
+		p.ySpeed = -ySpeed
 	}
 	if action.down {
-		yMove += ySpeed
+		p.ySpeed = ySpeed
 	}
 	if action.left {
-		xMove -= xSpeed
+		p.xSpeed = -xSpeed
 	}
 	if action.right {
-		xMove += xSpeed
+		p.xSpeed = xSpeed
 	}
-	newX := p.entity.x + xMove
-	newY := p.entity.y + yMove
-	didMove := xMove != 0 || yMove != 0
+	newX := p.entity.x + p.xSpeed
+	newY := p.entity.y + p.ySpeed
+	didMove := p.xSpeed != 0 || p.ySpeed != 0
 
 	collisions := view.collisions(p.entity, newX, newY)
 
@@ -125,6 +131,16 @@ func (p *Player) step(view EntitiesView) bool {
 		if success {
 			p.bombsAvailable--
 		}
+	}
+
+	if onSquare(newX, newY) {
+		p.xSpeed = 0
+		p.ySpeed = 0
+	}
+
+	if len(collisions) != 0 {
+		p.xSpeed = 0
+		p.ySpeed = 0
 	}
 
 	if didMove && len(collisions) == 0 {
@@ -142,6 +158,15 @@ func (p *Player) update(action PlayerAction) {
 
 func (p *Player) currentSquare() (float32, float32) {
 	return float32(int(p.entity.x)), float32(int(p.entity.y))
+}
+
+func onSquare(x float32, y float32) bool {
+	return wholeNumber(x) && wholeNumber(y)
+}
+
+func wholeNumber(val float32) bool {
+	_, frac := math.Modf(float64(val))
+	return frac < 1e-3 || frac > 1-1e-3
 }
 
 func decode(content []byte) PlayerAction {
