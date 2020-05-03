@@ -7,14 +7,16 @@ const (
 )
 
 type Bomb struct {
-	entity *Entity
-	state  uint8
+	entity  *Entity
+	state   uint8
+	numFire int
 }
 
-func newBomb(id int32, x float32, y float32) *Entity {
+func newBomb(id int32, x float32, y float32, numFire int) *Entity {
 	bomb := Bomb{
 		nil,
 		bombTimerLength,
+		numFire,
 	}
 	entity := Entity{
 		id,
@@ -40,5 +42,10 @@ func (bomb *Bomb) encode() []byte {
 }
 
 func (bomb *Bomb) step(view EntitiesView) bool {
+	bomb.state--
+	if bomb.state <= 0 {
+		view.delete(bomb.entity)
+	}
+
 	return false
 }

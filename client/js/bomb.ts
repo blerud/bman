@@ -8,11 +8,11 @@ class Bomb implements EntityInfo {
     private readonly _sprite: PIXI.Sprite;
     private _state: number;
 
-    constructor() {
-        this._sprite = PIXI.Sprite.from('assets/res/bomb0.png');
+    constructor(state: number) {
+        this._sprite = PIXI.Sprite.from('assets/res/bomb1.png');
         this._sprite.width = Const.BLOCK_SIZE;
         this._sprite.height = Const.BLOCK_SIZE;
-        this._state = Bomb.TIMER_LENGTH;
+        this._state = state;
     }
 
     get sprite(): PIXI.Sprite {

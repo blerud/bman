@@ -2,9 +2,10 @@ import Socket, {Message} from "./socket";
 import * as PIXI from "pixi.js";
 import {Keys, MessageTypes} from "./consts";
 import Player from "./player";
-import {HardWallMessage, PlayerMessage} from "./messages";
+import {BombMessage, HardWallMessage, PlayerMessage} from "./messages";
 import Entity from "./entity";
 import HardWall from "./hardwall";
+import Bomb from "./bomb";
 
 export interface InitInfo {
     username: string;
@@ -67,6 +68,15 @@ class Game {
 
                 this.entities.set(playerMessage.id, player);
                 this.app.stage.addChild(playerInfo.sprite);
+            } else if (entityType == BombMessage.TYPE) {
+                let bombMessage = BombMessage.fromBytes(new DataView(message.content, offset));
+                offset += BombMessage.LENGTH;
+
+                let bombInfo = new Bomb(bombMessage.state);
+                let bomb = new Entity(bombMessage.id, bombMessage.posX, bombMessage.posY, 1, 1, bombInfo);
+
+                this.entities.set(bombMessage.id, bomb);
+                this.app.stage.addChild(bombInfo.sprite);
             } else if (entityType == HardWallMessage.TYPE) {
                 let hardWallMessage = HardWallMessage.fromBytes(new DataView(message.content, offset));
                 offset += HardWallMessage.LENGTH;
@@ -122,6 +132,17 @@ class Game {
 
                 this.app.stage.removeChild(player.entityInfo.sprite);
                 this.entities.delete(player.id);
+            } else if (entityType == BombMessage.TYPE) {
+                let bombMessage = BombMessage.fromBytes(new DataView(message.content, offset));
+                offset += BombMessage.LENGTH;
+
+                let bomb = this.entities.get(bombMessage.id);
+                if (bomb == undefined) {
+                    continue;
+                }
+
+                this.app.stage.removeChild(bomb.entityInfo.sprite);
+                this.entities.delete(bomb.id);
             }
         }
         return true;

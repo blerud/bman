@@ -17,6 +17,7 @@ type EntitiesView interface {
 	create(entity *Entity) bool
 	update(entity *Entity) bool
 	delete(entity *Entity) bool
+	genEntityId() int32
 }
 
 type Server struct {
@@ -35,7 +36,7 @@ type Server struct {
 
 	created []int32
 	updated []int32
-	deleted []int32
+	deleted []*Entity
 }
 
 func newServer(serverId int32, coord *Coordinator) *Server {
@@ -52,7 +53,7 @@ func newServer(serverId int32, coord *Coordinator) *Server {
 		make(map[int32]int32),
 		make([]int32, 0),
 		make([]int32, 0),
-		make([]int32, 0),
+		make([]*Entity, 0),
 	}
 }
 
@@ -209,14 +210,14 @@ func (server *Server) step() {
 	if len(server.deleted) > 0 {
 		deleteBuf := make([]byte, 1)
 		deleteBuf[0] = byte(len(server.deleted))
-		for _, entityId := range server.deleted {
-			entityBytes := server.entities[entityId].encode()
+		for _, entity := range server.deleted {
+			entityBytes := entity.entityInfo.encode()
 			deleteBuf = append(deleteBuf, entityBytes...)
 		}
 
-		server.deleted = make([]int32, 0)
+		server.deleted = make([]*Entity, 0)
 
-		deleteMessage := Message{messageCreated, 0, 0, deleteBuf}
+		deleteMessage := Message{messageDeleted, 0, 0, deleteBuf}
 		server.sendQueue <- deleteMessage
 	}
 }
@@ -254,7 +255,7 @@ func (server *Server) delete(entity *Entity) bool {
 	}
 
 	delete(server.entities, entity.entityId)
-	server.deleted = append(server.deleted, entity.entityId)
+	server.deleted = append(server.deleted, entity)
 	return true
 }
 

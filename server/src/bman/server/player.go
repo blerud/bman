@@ -5,8 +5,8 @@ const (
 )
 
 const (
-	playerWidth    = float32(1)
-	playerHeight   = float32(1)
+	playerWidth    = float32(0.9)
+	playerHeight   = float32(0.9)
 	playerXSpeed   = float32(3)
 	playerYSpeed   = float32(3)
 	directionUp    = 0
@@ -16,9 +16,12 @@ const (
 )
 
 type Player struct {
-	entity    *Entity
-	action    PlayerAction
-	direction byte
+	entity         *Entity
+	action         PlayerAction
+	direction      byte
+	numBombs       int
+	bombsAvailable int
+	numFire        int
 }
 
 type PlayerMessage struct {
@@ -46,6 +49,9 @@ func newPlayer(id int32, x float32, y float32) *Entity {
 			false,
 		},
 		directionUp,
+		1,
+		1,
+		1,
 	}
 	entity := Entity{
 		id,
@@ -89,10 +95,12 @@ func (p *Player) encode() []byte {
 func (p *Player) step(view EntitiesView) bool {
 	xSpeed := playerXSpeed / tick
 	ySpeed := playerYSpeed / tick
+	locX, locY := p.currentSquare()
 
 	xMove := float32(0)
 	yMove := float32(0)
 	action := p.action
+
 	if action.up {
 		yMove -= ySpeed
 	}
@@ -105,12 +113,21 @@ func (p *Player) step(view EntitiesView) bool {
 	if action.right {
 		xMove += xSpeed
 	}
-
 	newX := p.entity.x + xMove
 	newY := p.entity.y + yMove
 	didMove := xMove != 0 || yMove != 0
 
-	if didMove && len(view.collisions(p.entity, newX, newY)) == 0 {
+	collisions := view.collisions(p.entity, newX, newY)
+
+	if action.bomb && p.bombsAvailable > 0 {
+		// todo check if currently colliding with a bomb, if so don't place the bomb
+		success := view.create(newBomb(view.genEntityId(), locX, locY, p.numFire))
+		if success {
+			p.bombsAvailable--
+		}
+	}
+
+	if didMove && len(collisions) == 0 {
 		p.entity.x = newX
 		p.entity.y = newY
 		return true
@@ -121,6 +138,10 @@ func (p *Player) step(view EntitiesView) bool {
 
 func (p *Player) update(action PlayerAction) {
 	p.action = action
+}
+
+func (p *Player) currentSquare() (float32, float32) {
+	return float32(int(p.entity.x)), float32(int(p.entity.y))
 }
 
 func decode(content []byte) PlayerAction {

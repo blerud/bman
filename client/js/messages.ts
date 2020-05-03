@@ -20,6 +20,24 @@ export class PlayerMessage {
     }
 }
 
+export class BombMessage {
+    static readonly TYPE = 1;
+    static readonly LENGTH = 14;
+    id: number;
+    posX: number;
+    posY: number;
+    state: number;
+
+    static fromBytes(bytes: DataView): BombMessage {
+        let message = new BombMessage();
+        message.id = bytes.getUint32(1);
+        message.posX = bytes.getFloat32(5);
+        message.posY = bytes.getFloat32(9);
+        message.state = bytes.getUint8(13);
+        return message;
+    }
+}
+
 export class HardWallMessage {
     static readonly TYPE = 3;
     static readonly LENGTH = 13;
