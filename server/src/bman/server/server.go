@@ -226,6 +226,10 @@ func (server *Server) collisions(entity *Entity, newX float32, newY float32) []*
 	collisions := make([]*Entity, 0)
 
 	for _, e := range server.entities {
+		if entity.entityId == e.entityId {
+			continue
+		}
+
 		collidingNow := server.collides(entity.x, entity.y, entity.width, entity.height, e.x, e.y, e.width, e.height)
 		if server.collides(newX, newY, entity.width, entity.height, e.x, e.y, e.width, e.height) && !collidingNow {
 			collisions = append(collisions, e)
