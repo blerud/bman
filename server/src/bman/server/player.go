@@ -157,7 +157,7 @@ func (p *Player) update(action PlayerAction) {
 }
 
 func (p *Player) currentSquare() (float32, float32) {
-	return float32(int(p.entity.x)), float32(int(p.entity.y))
+	return float32(math.Round(float64(p.entity.x))), float32(math.Round(float64(p.entity.y)))
 }
 
 func onSquare(x float32, y float32) bool {
