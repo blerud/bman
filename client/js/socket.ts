@@ -30,7 +30,7 @@ class Socket {
 
     setupSocket() {
         this.sock.binaryType = "arraybuffer";
-        let byteBuf = new ArrayBuffer(1000);
+        let byteBuf = new ArrayBuffer(10000);
         let bytesInBuf = 0;
         this.sock.onmessage = function(event: MessageEvent) {
             let data = event.data as ArrayBuffer;

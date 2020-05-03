@@ -101,8 +101,24 @@ func (server *Server) run() {
 
 func (server *Server) init() {
 	for i := 0; i < 15; i++ {
-		wall := newHardWall(server.genEntityId(), float32(i), 0)
-		server.create(wall)
+		topWall := newHardWall(server.genEntityId(), float32(i), 0)
+		botWall := newHardWall(server.genEntityId(), float32(i), 12)
+		server.create(topWall)
+		server.create(botWall)
+	}
+
+	for i := 1; i < 12; i++ {
+		leftWall := newHardWall(server.genEntityId(), 0, float32(i))
+		rightWall := newHardWall(server.genEntityId(), 14, float32(i))
+		server.create(leftWall)
+		server.create(rightWall)
+	}
+
+	for i := 2; i < 12; i += 2 {
+		for j := 2; j < 13; j += 2 {
+			wall := newHardWall(server.genEntityId(), float32(j), float32(i))
+			server.create(wall)
+		}
 	}
 }
 
