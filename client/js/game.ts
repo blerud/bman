@@ -25,7 +25,6 @@ class Game {
         this.entities = new Map<number, Entity>();
 
         let loader = PIXI.Loader.shared;
-        loader.add('bomb1', 'assets/res/bomb1.png');
         loader.load(this.setup.bind(this));
     }
 

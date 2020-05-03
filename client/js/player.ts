@@ -23,6 +23,7 @@ class Player implements EntityInfo {
     private _numBombsAvailable: number;
     private _numFire: number;
     private _sprite: PIXI.Sprite;
+    private readonly _heightOffset: number;
 
     constructor() {
         this._xSpeed = 0;
@@ -35,9 +36,10 @@ class Player implements EntityInfo {
         this._numBombsAvailable = this._numBombs;
         this._numFire = 1;
 
-        this._sprite = PIXI.Sprite.from('assets/res/bomb1.png');
+        this._sprite = PIXI.Sprite.from('assets/res/player0.png');
         this._sprite.width = Const.BLOCK_SIZE;
-        this._sprite.height = Const.BLOCK_SIZE;
+        this._sprite.height = 60 / 36 * Const.BLOCK_SIZE;
+        this._heightOffset = this._sprite.height - Const.BLOCK_SIZE;
     }
 
     get xSpeed(): number {
@@ -109,7 +111,7 @@ class Player implements EntityInfo {
     }
 
     y(value: number): void {
-        this.sprite.y = value * Const.BLOCK_SIZE;
+        this.sprite.y = value * Const.BLOCK_SIZE - this._heightOffset;
     }
 }
 

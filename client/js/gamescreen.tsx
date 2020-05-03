@@ -4,10 +4,10 @@ import Game, {InitInfo} from "./game";
 import Socket from "./socket";
 
 export class Const {
-    static WIDTH = 600;
-    static HEIGHT = 600;
+    static WIDTH = 650;
+    static HEIGHT = 650;
 
-    static BLOCK_SIZE = Const.WIDTH / 15
+    static BLOCK_SIZE = 32;
 }
 
 interface Props {
@@ -24,7 +24,7 @@ class GameScreen extends React.Component<Props, {}> {
     constructor(props: Props) {
         super(props);
 
-        this.app = new PIXI.Application({width: 800, height: 600});
+        this.app = new PIXI.Application({width: Const.WIDTH, height: Const.HEIGHT});
         this.game = new Game(this.app, props.sock, props.initInfo);
         this.sock = props.sock;
         this.initInfo = props.initInfo;
