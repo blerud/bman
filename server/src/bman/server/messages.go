@@ -10,28 +10,17 @@ const (
 
 	messageServerHeartbeat = 0
 	messageClientHeartbeat = 1
-	messageGameInit = 2
-	messageGameStart = 3
-	messageCreated = 10
-	messageUpdated = 11
-	messageDeleted = 12
-	messageClientAction = 20
-
-	playerMessageLength = 15
+	messageCreated         = 10
+	messageUpdated         = 11
+	messageDeleted         = 12
+	messageClientAction    = 20
 )
 
 type Message struct {
 	messageType byte
-	length int
-	timestamp int64
-	content []byte
-}
-
-type EntityMessage struct {
-	entityType byte
-	entityId int32
-	x float32
-	y float32
+	length      int
+	timestamp   int64
+	content     []byte
 }
 
 func writeInt32ToBuffer(i int32, buffer []byte) {
@@ -61,12 +50,12 @@ func readFloat32FromBuffer(buffer []byte) float32 {
 }
 
 func (m *Message) encodeMessage() []byte {
-	message := make([]byte, len(m.content) + headerLength)
+	message := make([]byte, len(m.content)+headerLength)
 	message[0] = m.messageType
 	writeInt32ToBuffer(int32(m.length), message[1:])
 	writeInt64ToBuffer(m.timestamp, message[5:])
 	for i, b := range m.content {
-		message[i + headerLength] = b
+		message[i+headerLength] = b
 	}
 	return message
 }

@@ -65,10 +65,6 @@ func (server *Server) run() {
 		case messageBytes := <-server.readQueue:
 			message := messageFromBytes(messageBytes)
 			server.process(message)
-			//code := message.messageType
-			//length := message.length
-			//timestamp := message.timestamp
-			//fmt.Printf("===== code: %d, length: %d, timestamp: %d\n", code, length, timestamp)
 		case message := <-server.sendQueue:
 			message.timestamp = time.Now().UnixNano() / (int64(time.Millisecond) / int64(time.Nanosecond))
 			message.length = len(message.content) + 8
@@ -81,10 +77,9 @@ func (server *Server) run() {
 			server.sendState(client.id)
 
 			player := newPlayer(client.id, 2, 2)
-			server.entities[client.id] = player
 			server.clientIdToEntityId[client.id] = client.id
 			server.entityIdToClientId[client.id] = client.id
-			server.createdEntity(player)
+			server.create(player)
 		case client := <-server.unregisterQueue:
 			if _, ok := server.clients[client.id]; ok {
 				fmt.Println("removing client")
@@ -147,17 +142,6 @@ func (server *Server) sendState(clientId int32) {
 
 	createMessage := Message{messageCreated, 0, 0, createBuf}
 	server.sendToClient(clientId, createMessage)
-}
-
-func (server *Server) createdEntity(entity *Entity) {
-	createBuf := make([]byte, 1)
-	createBuf[0] = byte(1)
-	entityBytes := server.entities[entity.entityId].encode()
-	createBuf = append(createBuf, entityBytes...)
-	fmt.Printf("created object %d\n", entity.entityId)
-
-	createMessage := Message{messageCreated, 0, 0, createBuf}
-	server.sendQueue <- createMessage
 }
 
 func (server *Server) process(message Message) bool {

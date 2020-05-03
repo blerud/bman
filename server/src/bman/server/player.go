@@ -30,12 +30,6 @@ type Player struct {
 	numFire        int
 }
 
-type PlayerMessage struct {
-	EntityMessage
-	action    byte
-	direction byte
-}
-
 type PlayerAction struct {
 	up    bool
 	down  bool
@@ -80,23 +74,13 @@ func (p *Player) processPlayerAction(message Message) {
 }
 
 func (p *Player) encode() []byte {
-	playerUpdate := PlayerMessage{
-		EntityMessage{
-			p.entity.entityType,
-			p.entity.entityId,
-			p.entity.x,
-			p.entity.y,
-		},
-		p.action.toByte(),
-		p.direction,
-	}
 	buffer := make([]byte, 15)
-	buffer[0] = playerUpdate.entityType
-	writeInt32ToBuffer(playerUpdate.entityId, buffer[1:])
-	writeFloat32ToBuffer(playerUpdate.x, buffer[5:])
-	writeFloat32ToBuffer(playerUpdate.y, buffer[9:])
-	buffer[13] = playerUpdate.action
-	buffer[14] = playerUpdate.direction
+	buffer[0] = PLAYER
+	writeInt32ToBuffer(p.entity.entityId, buffer[1:])
+	writeFloat32ToBuffer(p.entity.x, buffer[5:])
+	writeFloat32ToBuffer(p.entity.y, buffer[9:])
+	buffer[13] = p.action.toByte()
+	buffer[14] = p.direction
 	return buffer
 }
 

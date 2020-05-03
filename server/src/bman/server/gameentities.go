@@ -22,7 +22,6 @@ type EntityInfo interface {
 }
 
 type Entity struct {
-	// x and y of bottom left corner of object -- all objects are square
 	entityId   int32
 	entityType byte
 	x          float32

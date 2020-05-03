@@ -60,7 +60,6 @@ func (c *Client) getCompleteMessages() [][]byte {
 	if len(c.incompleteMessages) < 5 {
 		return make([][]byte, 0)
 	}
-	//fmt.Println(c.incompleteMessages)
 	completeMessages := make([][]byte, 0)
 	i := 0
 	for i+5 < len(c.incompleteMessages) {
