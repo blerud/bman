@@ -77,7 +77,6 @@ func (coord *Coordinator) createServer() int32 {
 	server := newServer(serverId, coord)
 	coord.servers[serverId] = server
 	go server.run()
-	go server.startDeleteTimer()
 	return serverId
 }
 

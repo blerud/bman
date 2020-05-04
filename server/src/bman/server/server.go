@@ -60,6 +60,7 @@ func newServer(serverId int32, coord *Coordinator) *Server {
 func (server *Server) run() {
 	server.init()
 	ticker := time.NewTicker(millisPerTick)
+	deleteTicker := time.NewTicker(timeToConnect)
 	for {
 		select {
 		case messageBytes := <-server.readQueue:
@@ -90,6 +91,12 @@ func (server *Server) run() {
 		case _ = <-ticker.C:
 			server.heartbeat()
 			server.step()
+		case _ = <-deleteTicker.C:
+			if len(server.clients) == 0 {
+				server.finit()
+				ticker.Stop()
+				deleteTicker.Stop()
+			}
 		}
 	}
 }
@@ -117,11 +124,10 @@ func (server *Server) init() {
 	}
 }
 
-func (server *Server) startDeleteTimer() {
-	timer := time.NewTimer(timeToConnect)
-	<-timer.C
-	if len(server.clients) == 0 {
-		server.coordinator.closeServer(server.serverId)
+func (server *Server) finit() {
+	server.coordinator.closeServer(server.serverId)
+	for entityId, _ := range server.entities {
+		delete(server.entities, entityId)
 	}
 }
 
